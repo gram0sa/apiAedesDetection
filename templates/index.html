@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Larva Detector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-xl">
+    <h1 class="text-3xl font-bold text-center mb-6">🦟 Larva Detector 🔬</h1>
+
+    <!-- Dropzone -->
+    <div id="drop-zone" class="border-4 border-dashed border-gray-400 rounded-xl p-10 text-center cursor-pointer">
+      <p class="text-gray-600">Arraste uma imagem <span class="underline">aqui</span> ou clique para selecionar</p>
+      <input type="file" id="file-input" class="hidden" accept="image/*">
+    </div>
+
+    <!-- Preview -->
+    <div id="preview-container" class="mt-6 hidden">
+      <h2 class="text-lg font-semibold mb-2">Pré-visualização:</h2>
+      <img id="preview" src="" alt="Prévia" class="w-full rounded-lg shadow">
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="mt-6 hidden text-center">
+      <span class="text-gray-500 animate-pulse">Processando imagem...</span>
+    </div>
+
+    <!-- Resultado -->
+    <div id="result-container" class="mt-6 hidden">
+      <h2 class="text-lg font-semibold mb-2">Resultado:</h2>
+      <div id="result" class="text-xl font-bold text-center"></div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('preview-container');
+    const resultContainer = document.getElementById('result-container');
+    const result = document.getElementById('result');
+    const loader = document.getElementById('loader');
+
+    const BEARER_TOKEN = "{{ token }}";
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Mostra prévia original enquanto processa
+      preview.src = URL.createObjectURL(file);
+      previewContainer.classList.remove('hidden');
+      resultContainer.classList.add('hidden');
+      loader.classList.remove('hidden');
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/api/predict", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Authorization": `Bearer ${BEARER_TOKEN}`
+          }
+        });
+
+        const data = await response.json();
+        loader.classList.add('hidden');
+        resultContainer.classList.remove('hidden');
+        result.innerHTML = `
+          <p class="text-green-600">Classe predita: <strong>${data.label}</strong></p>
+          <p class="text-gray-600 text-sm">Confiança: ${(data.confidence).toFixed(2)}%</p>
+          <p class="text-gray-400 text-xs mt-2">Inferência: ${data.inference_time_ms} ms</p>
+        `;
+
+        // Substitui pela imagem anotada (base64)
+        preview.src = `data:image/jpeg;base64,${data.annotated_image}`;
+      } catch (err) {
+        loader.classList.add('hidden');
+        resultContainer.classList.remove('hidden');
+        result.innerHTML = `<span class="text-red-600">Erro na inferência</span>`;
+      }
+    });
+  </script>
+</body>
+</html>
