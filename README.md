@@ -25,10 +25,10 @@ Tudo pensado para entregar um serviço de inferência leve, escalável e fácil 
 
 ## 3. Métricas de Desempenho
 
-1. **Loss & Accuracy ao longo das épocas**  
+1. **Acc, Precision, Recall e F1-Score**  
    ![Acc Precision Recall F1-Score](imgs/metrica1.jpeg)
 
-2. **Curva ROC / Precision-Recall**  
+2. **Confusion Matrix**  
    ![Confusion Matrix](imgs/metrica2.jpeg)
 
 ---
